@@ -1,17 +1,23 @@
-export const authors = [{ id: "1", name: "John Doe" }];
+import { sql } from "../../config/db";
 
 export const authorResolvers = {
     Query: {
-        getAuthors: () => authors,
+        getAuthors: async () => {
+            return await sql`SELECT * FROM authors`;
+        }
     },
     Mutation: {
-        createAuthor: (_: any, { name }: { name: string }) => {
-            const newAuthor = { id: (authors.length + 1).toString(), name };
-            authors.push(newAuthor);
+        createAuthor: async (_: any, { name }: { name: string }) => {
+            const [newAuthor] = await sql`
+              INSERT INTO authors (name)
+              VALUES (${name})
+              RETURNING *`;
             return newAuthor;
         },
     },
     Author: {
-        posts: (author: any, _: any, { posts }: any) => posts.filter((p: any) => p.authorId === author.id),
+        posts: async (author: any) => {
+            return await sql`SELECT * FROM posts WHERE author_id = ${author.id}`;
+        },
     },
 };
